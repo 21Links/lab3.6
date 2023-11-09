@@ -1,0 +1,102 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace WeatherApp
+{
+    public struct Weather
+    {
+        public string Country { get; set; }
+        public string Name { get; set; }
+        public double Temp { get; set; }
+        public string Description { get; set; }
+    }
+
+    class Program
+    {
+        private static readonly HttpClient _httpClient = new HttpClient();
+        private const string _apiKey = "3438998c14ebf34aba2bfe2c5abc414f";
+
+        static async Task Main(string[] args)
+        {
+            List<Weather> weatherData = await GetWeatherDataAsync();
+
+            // Страна с максимальной температурой
+            var maxTempCountry = weatherData.OrderByDescending(w => w.Temp).FirstOrDefault().Country;
+            Console.WriteLine($"Страна с максимальной температурой: {maxTempCountry}");
+
+            // Страна с минимальной температурой
+            var minTempCountry = weatherData.OrderBy(w => w.Temp).FirstOrDefault().Country;
+            Console.WriteLine($"Страна с минимальной температурой: {minTempCountry}");
+
+            // Средняя температура в мире
+            var averageTemp = weatherData.Average(w => w.Temp);
+            Console.WriteLine($"Средняя температура в мире: {averageTemp}");
+
+            // Количество стран в коллекции
+            var countriesCount = weatherData.Select(w => w.Country).Distinct().Count();
+            Console.WriteLine($"Количество стран в коллекции: {countriesCount}");
+
+            // Первая найденная страна и название местности с определенным описанием погоды
+            var weatherWithDescription = new List<string> { "clear sky", "rain", "few clouds" };
+            var firstMatch = weatherData.FirstOrDefault(w => weatherWithDescription.Contains(w.Description));
+            if (firstMatch != null)
+            {
+                Console.WriteLine($"Первая найденная страна и место с описанием погоды \"{firstMatch.Description}\": {firstMatch.Country}, {firstMatch.Name}");
+            }
+            else
+            {
+                Console.WriteLine("Не найдено погоды с указанным описанием");
+            }
+        }
+
+        static async Task<List<Weather>> GetWeatherDataAsync()
+        {
+            List<Weather> weatherData = new List<Weather>();
+
+            while (weatherData.Count < 50)
+            {
+                double latitude = GetRandomLatitude();
+                double longitude = GetRandomLongitude();
+
+                var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}";
+
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var weather = ParseWeatherData(content);
+
+                    if (!string.IsNullOrEmpty(weather.Country) && !string.IsNullOrEmpty(weather.Name))
+                    {
+                        weatherData.Add(weather);
+                    }
+                }
+            }
+
+            return weatherData;
+        }
+
+        static Weather ParseWeatherData(string jsonData)
+        {
+            // Здесь необходимо разобрать полученные данные и вернуть экземпляр структуры Weather
+            // В данном примере предполагается, что данные уже получены и обработаны
+            return new Weather();
+        }
+
+        static double GetRandomLatitude()
+        {
+            // Здесь можно сгенерировать случайное значение широты в заданном диапазоне
+            return 0.0;
+        }
+
+        static double GetRandomLongitude()
+        {
+            // Здесь можно сгенерировать случайное значение долготы в заданном диапазоне
+            return 0.0;
+        }
+    }
+}
